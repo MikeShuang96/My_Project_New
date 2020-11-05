@@ -13,7 +13,6 @@ from keras import backend as K
 from keras.layers import Average
 from keras.models import Model
 
-count = 1
 
 def draw_axis(img, yaw, pitch, roll, tdx=None, tdy=None, size=80):
 
@@ -54,9 +53,10 @@ def draw_axis(img, yaw, pitch, roll, tdx=None, tdy=None, size=80):
 def draw_results_mtcnn(detected, input_img, faces, ad, img_size, img_w, img_h, model, time_detection, time_network, time_plot):
 
     if len(detected) > 0:
-        for i, d in enumerate(detected):
+        for i, d in enumerate(detected):  #遍历所有检测到的人脸
             #x1, y1, x2, y2, w, h = d.left(), d.top(), d.right() + 1, d.bottom() + 1, d.width(), d.height()
-            if d['confidence'] > 0.95:
+            ConfidenceValue = 0.85   #置信
+            if d['confidence'] > ConfidenceValue:
                 x1, y1, w, h = d['box']
 
                 x2 = x1+w
@@ -74,12 +74,14 @@ def draw_results_mtcnn(detected, input_img, faces, ad, img_size, img_w, img_h, m
 
                 face = np.expand_dims(faces[i, :, :, :], axis=0)
                 p_result = model.predict(face)          
-                print(p_result)
+                print(str(i)+"的"+"head pose:",p_result)
                 face = face.squeeze()
-                img = draw_axis(input_img[yw1:yw2 + 1, xw1:xw2 + 1, :],
-                                p_result[0][0], p_result[0][1], p_result[0][2])
-
-                input_img[yw1:yw2 + 1, xw1:xw2 + 1, :] = img
+                #在人脸上画辅助坐标轴
+                #draw_axis(img, yaw, pitch, roll, tdx=None, tdy=None, size=80):
+                img = draw_axis(input_img[yw1:yw2 + 1, xw1:xw2 + 1, :],       # img为单独裁剪出来的人脸
+                                p_result[0][0], p_result[0][1], p_result[0][2])  # yaw, pitch, roll
+                cv2.imshow(str(i),img)   # 查看每个单独裁剪出来的人脸
+                input_img[yw1:yw2 + 1, xw1:xw2 + 1, :] = img    # 将裁剪出来的人脸补到对应的位置上
 
     cv2.imshow("result", input_img)
     
